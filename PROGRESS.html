@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>{{PROJECT_NAME}} progress</title>
+<style>
+:root {
+  --bg: #f6f6f3; --surface: #ffffff; --ink: #1a1a18; --muted: #575752;
+  --line: #dcdcd5; --line-strong: #7d7d76; --track: #e5e5df;
+  --accent: #1d4ed8; --on-accent: #ffffff; --accent-bg: #e6edfc;
+  --done-fg: #146c36; --done-bg: #e4f4ea; --done-bar: #1a8044;
+  --prog-fg: #1d4ed8; --prog-bg: #e6edfc; --prog-bar: #2f5fe0;
+  --review-fg: #6528c9; --review-bg: #efe8fb; --review-bar: #7c3aed;
+  --block-fg: #b42318; --block-bg: #fdeceb; --block-bar: #d92d20;
+  --todo-fg: #575752; --todo-bg: #ecece7; --todo-bar: #77776f;
+  --warn-fg: #7a4a00; --warn-bg: #fff4d6; --warn-line: #b27300;
+  --radius: 10px; --radius-lg: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121211; --surface: #1c1c1a; --ink: #f0f0ec; --muted: #b0b0a8;
+    --line: #363631; --line-strong: #8c8c84; --track: #2e2e2a;
+    --accent: #8fb0ff; --on-accent: #0b1020; --accent-bg: #16244a;
+    --done-fg: #6ee79a; --done-bg: #12301f; --done-bar: #4ade80;
+    --prog-fg: #9db9ff; --prog-bg: #16244a; --prog-bar: #7da3ff;
+    --review-fg: #cdb2ff; --review-bg: #2a1d4d; --review-bar: #b794ff;
+    --block-fg: #ff9d94; --block-bg: #4a1a17; --block-bar: #ff7a70;
+    --todo-fg: #b0b0a8; --todo-bg: #2a2a27; --todo-bar: #8c8c84;
+    --warn-fg: #ffd37a; --warn-bg: #3a2c08; --warn-line: #d9a22e;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121211; --surface: #1c1c1a; --ink: #f0f0ec; --muted: #b0b0a8;
+  --line: #363631; --line-strong: #8c8c84; --track: #2e2e2a;
+  --accent: #8fb0ff; --on-accent: #0b1020; --accent-bg: #16244a;
+  --done-fg: #6ee79a; --done-bg: #12301f; --done-bar: #4ade80;
+  --prog-fg: #9db9ff; --prog-bg: #16244a; --prog-bar: #7da3ff;
+  --review-fg: #cdb2ff; --review-bg: #2a1d4d; --review-bar: #b794ff;
+  --block-fg: #ff9d94; --block-bg: #4a1a17; --block-bar: #ff7a70;
+  --todo-fg: #b0b0a8; --todo-bg: #2a2a27; --todo-bar: #8c8c84;
+  --warn-fg: #ffd37a; --warn-bg: #3a2c08; --warn-line: #d9a22e;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+header.wrap { padding-top: 24px; }
+main.wrap { padding-bottom: 8px; }
+footer.wrap { padding-bottom: 56px; }
+h1, h2, h3 { margin: 0; line-height: 1.25; font-weight: 600; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.125rem; }
+h3 { font-size: 1rem; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.875rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+button, select {
+  font: inherit; font-weight: 500; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  min-height: 40px; padding: 6px 14px; cursor: pointer;
+}
+button:hover, select:hover { background: var(--accent-bg); }
+button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+label.check { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer; }
+label.check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+.top { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.top .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 20px; }
+.card + .card, .stack > * + * { margin-top: 16px; }
+.grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 800px) { .grid2 { grid-template-columns: 3fr 2fr; } }
+
+.overall { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+.big { font-size: 3rem; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+.overall .bar-wrap { flex: 1 1 240px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.now { margin-top: 16px; display: grid; gap: 4px; }
+.now b { font-weight: 600; }
+
+.needs { border-color: var(--warn-line); background: var(--warn-bg); color: var(--warn-fg); }
+.needs h2 { color: var(--warn-fg); }
+.needs ul { margin: 8px 0 0; padding-left: 20px; }
+.needs li + li { margin-top: 6px; }
+.ok { border-color: var(--line); }
+
+.banner { border: 1px solid var(--warn-line); background: var(--warn-bg); color: var(--warn-fg); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px; }
+.banner.err { border-color: var(--block-bar); background: var(--block-bg); color: var(--block-fg); }
+.banner ul { margin: 6px 0 0; padding-left: 20px; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 6px; border-radius: 999px;
+  padding: 2px 10px; font-size: 0.8125rem; font-weight: 500; white-space: nowrap;
+  background: var(--todo-bg); color: var(--todo-fg);
+}
+.badge .sym { font-size: 0.8125rem; line-height: 1; }
+.badge[data-s="done"], .step[data-s="passed"] .st { background: var(--done-bg); color: var(--done-fg); }
+.badge[data-s="in_progress"], .step[data-s="running"] .st { background: var(--prog-bg); color: var(--prog-fg); }
+.badge[data-s="in_review"] { background: var(--review-bg); color: var(--review-fg); }
+.badge[data-s="blocked"], .step[data-s="changes"] .st, .step[data-s="blocked"] .st { background: var(--block-bg); color: var(--block-fg); }
+.badge.tag { background: transparent; border: 1px solid var(--line-strong); color: var(--muted); }
+
+.bar { height: 10px; background: var(--track); border-radius: 999px; overflow: hidden; }
+.bar > span { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--todo-bar); transition: width 0.3s ease; }
+.bar[data-s="done"] > span { background: var(--done-bar); }
+.bar[data-s="in_progress"] > span { background: var(--prog-bar); }
+.bar[data-s="in_review"] > span { background: var(--review-bar); }
+.bar[data-s="blocked"] > span { background: var(--block-bar); }
+.barrow { display: flex; align-items: center; gap: 12px; }
+.barrow .bar { flex: 1 1 auto; }
+.pct { min-width: 3.25em; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+.bar.lg { height: 14px; }
+
+.phases-row { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 16px 0; }
+.phasecard { display: block; text-decoration: none; color: inherit; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-lg); padding: 14px 16px; }
+.phasecard:hover { border-color: var(--accent); }
+.phasecard .row1 { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+.phasecard .nm { font-weight: 600; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; margin: 20px 0 12px; }
+.filters .group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters .gl { font-size: 0.875rem; color: var(--muted); margin-right: 4px; }
+
+details.phase { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); margin-top: 16px; }
+details.phase > summary { list-style: none; cursor: pointer; padding: 16px 20px; display: grid; gap: 10px; border-radius: var(--radius-lg); }
+details > summary::-webkit-details-marker { display: none; }
+details.phase > summary .head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+details.phase > summary .chev, details.task > summary .chev { display: inline-block; transition: transform 0.2s ease; color: var(--muted); }
+details[open] > summary .chev { transform: rotate(90deg); }
+.phase-body { padding: 0 20px 20px; display: grid; gap: 12px; }
+.goal { color: var(--muted); }
+
+article.task { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; background: var(--bg); }
+article.task[data-s="blocked"] { border-color: var(--block-bar); }
+.task .head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 10px; }
+.task .tid { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 500; }
+.task .ttl { font-weight: 600; flex: 1 1 200px; }
+.blockedmsg { margin-top: 10px; color: var(--block-fg); background: var(--block-bg); border-radius: var(--radius); padding: 8px 12px; }
+.note { margin-top: 10px; color: var(--muted); }
+
+.pipe { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.step { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 10px 4px 8px; background: var(--surface); font-size: 0.875rem; }
+.step[data-s="na"] { border-style: dashed; }
+.step .sym { width: 1.25em; text-align: center; font-weight: 600; }
+.step .st { border-radius: 999px; padding: 0 8px; font-size: 0.8125rem; font-weight: 500; background: var(--todo-bg); color: var(--todo-fg); }
+
+details.task { margin-top: 12px; }
+details.task > summary { cursor: pointer; font-weight: 500; padding: 6px 0; min-height: 32px; display: flex; gap: 8px; align-items: center; }
+.subs { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 10px; }
+.sub { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.sub .line1 { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; }
+.sub .t { flex: 1 1 200px; }
+.sub[data-s="skipped"] .t { text-decoration: line-through; color: var(--muted); }
+
+.activity { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 0; }
+.activity li { display: grid; gap: 2px; padding: 10px 0; border-top: 1px solid var(--line); }
+.activity li:first-child { border-top: 0; }
+.activity .meta { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 0.8125rem; color: var(--muted); }
+.activity .who { font-weight: 600; color: var(--ink); }
+.empty { padding: 24px; text-align: center; color: var(--muted); border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); margin-top: 16px; }
+footer { margin-top: 0; padding-top: 32px; color: var(--muted); font-size: 0.875rem; }
+footer code { background: var(--todo-bg); padding: 1px 6px; border-radius: 6px; }
+
+@media (max-width: 520px) {
+  .big { font-size: 2.5rem; }
+  .phase-body { padding: 0 12px 16px; }
+  details.phase > summary { padding: 14px 12px; }
+  .card { padding: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar > span, details > summary .chev { transition: none; }
+}
+@media print {
+  .actions, .filters { display: none; }
+  details.phase, details.task { display: block; }
+  body { background: #fff; }
+}
+</style>
+</head>
+<body>
+<header class="wrap top">
+    <div>
+      <h1 id="title">Project progress</h1>
+      <p class="muted small" id="updated" aria-live="polite"></p>
+    </div>
+    <div class="actions">
+      <button type="button" id="reload">Reload</button>
+      <label class="check"><input type="checkbox" id="auto"> Refresh every 30 s</label>
+      <button type="button" id="theme" aria-label="Theme: automatic. Click to change.">Theme: auto</button>
+    </div>
+</header>
+<main class="wrap" id="app" aria-label="Project progress"><p class="muted">Loading progress…</p></main>
+<noscript><p class="banner err">This page needs JavaScript to draw the progress view. The data is in the page source; the plan is in docs/ROADMAP.md.</p></noscript>
+<footer class="wrap">
+    <p>This page is a <strong>view</strong>. The plan and each task's status of record live in <code>docs/ROADMAP.md</code>; if they disagree, the roadmap wins. Only the <code>progress-reporter</code> agent edits the data block below (rules in <code>.claude/agents/progress-reporter.md</code>). Nothing here is sent anywhere: the page makes no network requests.</p>
+</footer>
+
+<!--
+DATA BLOCK. Only the progress-reporter agent edits inside this script tag.
+Valid JSON only. Never write "</" inside a string: write "</" instead.
+Field and status rules: .claude/agents/progress-reporter.md.
+-->
+<script type="application/json" id="progress-data">
+{
+  "version": 1,
+  "project": "{{PROJECT_NAME}}",
+  "updated": "2026-10-30T00:00:00Z",
+  "updatedBy": "project starter",
+  "summary": "Project created from the starter. Nothing is built yet; the first task is M0-1.",
+  "now": "M0-1 Fill in the placeholders and rename the project",
+  "next": ["M0-2 Brand colour and logo", "M0-3 Brief for the first real feature", "M0-4 CI on every PR", "M0-5 First deploy"],
+  "needsOwner": [
+    { "id": "o1", "text": "Product summary, roles and brand colour (for M0-1 and M0-2).", "since": "2026-10-30", "taskId": "M0-1" }
+  ],
+  "phases": [
+    {
+      "id": "M0",
+      "title": "M0 Set up and ship the skeleton",
+      "goal": "The starter is renamed, branded, checked, in CI and live.",
+      "tasks": [
+        {
+          "id": "M0-1", "title": "Fill in the placeholders and rename the project", "area": "docs", "owner": "project-manager", "size": "S", "status": "todo",
+          "review": { "code": "pending", "ux": "na", "qa": "na" },
+          "subtasks": [
+            { "id": "M0-1.1", "title": "Fill in or deliberately defer every placeholder", "status": "todo" },
+            { "id": "M0-1.2", "title": "Set the project slug everywhere", "status": "todo" },
+            { "id": "M0-1.3", "title": "Keep or replace the Overview and States example pages", "status": "todo" },
+            { "id": "M0-1.4", "title": "Typecheck, lint, test and build pass", "status": "todo" }
+          ]
+        },
+        {
+          "id": "M0-2", "title": "Set the brand colour and logo", "area": "design", "owner": "product-designer", "size": "S", "status": "todo",
+          "review": { "code": "pending", "ux": "pending", "qa": "pending" },
+          "subtasks": [
+            { "id": "M0-2.1", "title": "Brand colour applied in both themes", "status": "todo" },
+            { "id": "M0-2.2", "title": "Contrast measured and recorded in DESIGN_SYSTEM.md §2", "status": "todo" },
+            { "id": "M0-2.3", "title": "Logo and favicon added to public/", "status": "todo" },
+            { "id": "M0-2.4", "title": "Checked at 375, 768 and 1280 px, light and dark", "status": "todo" }
+          ]
+        },
+        {
+          "id": "M0-3", "title": "Brief and user flow for the first real feature", "area": "design", "owner": "product-designer", "size": "M", "status": "todo",
+          "review": { "code": "na", "ux": "pending", "qa": "na" },
+          "subtasks": [
+            { "id": "M0-3.1", "title": "One-paragraph brief: who, job, pain, success signal", "status": "todo" },
+            { "id": "M0-3.2", "title": "User flow", "status": "todo" },
+            { "id": "M0-3.3", "title": "Must-have vs later, and open questions for the owner", "status": "todo" },
+            { "id": "M0-3.4", "title": "Feature added to GUIDE.md and split into M1 tasks", "status": "todo" }
+          ]
+        },
+        {
+          "id": "M0-4", "title": "CI on every PR", "area": "devops", "owner": "devops", "size": "S", "status": "todo",
+          "review": { "code": "pending", "ux": "na", "qa": "na" },
+          "subtasks": [
+            { "id": "M0-4.1", "title": "Workflow runs install, typecheck, lint, test and build", "status": "todo" },
+            { "id": "M0-4.2", "title": "Passes on the M0 PR", "status": "todo" }
+          ]
+        },
+        {
+          "id": "M0-5", "title": "First deploy and smoke test", "area": "devops", "owner": "devops, then qa-tester", "size": "S", "status": "todo",
+          "review": { "code": "pending", "ux": "na", "qa": "pending" },
+          "subtasks": [
+            { "id": "M0-5.1", "title": "Deploy succeeds (owner approves)", "status": "todo" },
+            { "id": "M0-5.2", "title": "Live URL: / renders and /api/health answers ok", "status": "todo" },
+            { "id": "M0-5.3", "title": "Light and dark work, no console errors", "status": "todo" },
+            { "id": "M0-5.4", "title": "URL recorded in CLAUDE.md and GUIDE.md", "status": "todo" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M1",
+      "title": "M1 {{FIRST_MILESTONE}}",
+      "goal": "{{OUTCOME}}",
+      "tasks": [
+        {
+          "id": "M1-1", "title": "{{TASK}}", "area": "frontend", "owner": "{{AGENT}}", "size": "M", "status": "todo",
+          "review": { "code": "pending", "ux": "pending", "qa": "pending" },
+          "subtasks": []
+        }
+      ]
+    }
+  ],
+  "log": [
+    { "at": "2026-10-30T00:00:00Z", "agent": "project starter", "text": "Dashboard created from the starter, seeded from the M0 queue in docs/ROADMAP.md." }
+  ]
+}
+</script>
+
+<script>
+(function () {
+  "use strict";
+
+  var STATUS = {
+    todo:        { label: "To do",       pct: 0,    sym: "○" },
+    in_progress: { label: "In progress", pct: 50,   sym: "◐" },
+    in_review:   { label: "In review",   pct: 90,   sym: "◑" },
+    done:        { label: "Done",        pct: 100,  sym: "✓" },
+    blocked:     { label: "Blocked",     pct: 0,    sym: "!" },
+    skipped:     { label: "Skipped",     pct: null, sym: "–" }
+  };
+  var REVIEW = {
+    na:      { label: "Not needed",        sym: "–" },
+    pending: { label: "Waiting",           sym: "○" },
+    running: { label: "Running",           sym: "◐" },
+    changes: { label: "Changes requested", sym: "✕" },
+    passed:  { label: "Passed",            sym: "✓" },
+    blocked: { label: "Blocked",           sym: "!" }
+  };
+  var BUILD_STATE = { todo: "pending", in_progress: "running", in_review: "passed", done: "passed", blocked: "blocked", skipped: "na" };
+  var STEPS = [["code", "Code review"], ["ux", "UX review"], ["qa", "QA tests"]];
+  var AREAS = { design: "Design", frontend: "Front end", backend: "Back end", devops: "DevOps", qa: "QA", docs: "Docs", planning: "Planning" };
+  var WEIGHT = { S: 1, M: 2, L: 4 };
+  var STALE_MS = 24 * 3600 * 1000;
+
+  var app = document.getElementById("app");
+  var data = null;
+  var filters = { status: "all", area: "all" };
+  var toggled = {};
+  var showAllLog = false;
+
+  function h(tag, attrs) {
+    var el = document.createElement(tag);
+    if (attrs) {
+      for (var k in attrs) {
+        if (!Object.prototype.hasOwnProperty.call(attrs, k) || attrs[k] == null || attrs[k] === false) continue;
+        if (k === "class") el.className = attrs[k];
+        else if (k === "text") el.textContent = attrs[k];
+        else el.setAttribute(k, attrs[k] === true ? "" : String(attrs[k]));
+      }
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c == null || c === false) continue;
+      el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+    }
+    return el;
+  }
+
+  function clamp(n) { return Math.max(0, Math.min(100, Math.round(n))); }
+  function statusInfo(s) { return STATUS[s] || STATUS.todo; }
+
+  function subPct(s) {
+    if (s.status === "skipped") return null;
+    if (typeof s.percent === "number") return clamp(s.percent);
+    return statusInfo(s.status).pct;
+  }
+  function taskPct(t) {
+    if (t.status === "skipped") return null;
+    if (t.status === "done") return 100;
+    var subs = (t.subtasks || []).map(subPct).filter(function (p) { return p !== null; });
+    var base = subs.length ? subs.reduce(function (a, b) { return a + b; }, 0) / subs.length : statusInfo(t.status).pct;
+    return Math.min(clamp(base), 95);
+  }
+  function weight(t) { return WEIGHT[t.size] || 1; }
+  function weighted(tasks) {
+    var sum = 0, w = 0;
+    tasks.forEach(function (t) {
+      var p = taskPct(t);
+      if (p === null) return;
+      sum += p * weight(t); w += weight(t);
+    });
+    return w ? clamp(sum / w) : 0;
+  }
+  function phaseStatus(p) {
+    var ts = (p.tasks || []).filter(function (t) { return t.status !== "skipped"; });
+    if (!ts.length) return "todo";
+    if (ts.every(function (t) { return t.status === "done"; })) return "done";
+    if (ts.some(function (t) { return t.status === "blocked"; })) return "blocked";
+    if (ts.some(function (t) { return t.status !== "todo"; })) return "in_progress";
+    return "todo";
+  }
+
+  function validate(d) {
+    var errs = [], ids = {};
+    function id(x, where) { if (!x) { errs.push(where + " has no id"); return; } if (ids[x]) errs.push("Duplicate id " + x); ids[x] = 1; }
+    if (!d || d.version !== 1) errs.push("Unsupported or missing version (expected 1).");
+    if (!d || !Array.isArray(d.phases)) { errs.push("phases must be a list."); return errs; }
+    d.phases.forEach(function (p) {
+      id(p.id, "A phase");
+      if (!Array.isArray(p.tasks)) { errs.push("Phase " + p.id + ": tasks must be a list."); return; }
+      p.tasks.forEach(function (t) {
+        id(t.id, "A task");
+        if (!STATUS[t.status]) errs.push("Task " + t.id + ": unknown status " + JSON.stringify(t.status));
+        if (t.review) STEPS.forEach(function (s) { if (t.review[s[0]] && !REVIEW[t.review[s[0]]]) errs.push("Task " + t.id + ": unknown review state " + JSON.stringify(t.review[s[0]])); });
+        (t.subtasks || []).forEach(function (s) {
+          id(s.id, "A subtask of " + t.id);
+          if (!STATUS[s.status]) errs.push("Subtask " + s.id + ": unknown status " + JSON.stringify(s.status));
+          if (s.percent != null && (typeof s.percent !== "number" || s.percent < 0 || s.percent > 100)) errs.push("Subtask " + s.id + ": percent must be 0 to 100.");
+        });
+      });
+    });
+    return errs;
+  }
+
+  function parseDate(s) { var t = Date.parse(s); return isNaN(t) ? null : new Date(t); }
+  function ago(date) {
+    if (!date) return "date not set";
+    var m = Math.round((Date.now() - date.getTime()) / 60000);
+    if (m < 1) return "just now";
+    if (m < 60) return m + (m === 1 ? " minute ago" : " minutes ago");
+    var hr = Math.round(m / 60);
+    if (hr < 24) return hr + (hr === 1 ? " hour ago" : " hours ago");
+    var d = Math.round(hr / 24);
+    return d + (d === 1 ? " day ago" : " days ago");
+  }
+  function absolute(date) {
+    if (!date) return "";
+    try { return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date); }
+    catch (e) { return date.toISOString(); }
+  }
+
+  function badge(status) {
+    var i = statusInfo(status);
+    return h("span", { class: "badge", "data-s": status }, h("span", { class: "sym", "aria-hidden": "true", text: i.sym }), i.label);
+  }
+  function bar(pct, status, label, large) {
+    var fill = h("span");
+    fill.style.width = pct + "%";
+    return h("div", { class: "bar" + (large ? " lg" : ""), "data-s": status, role: "progressbar", "aria-valuemin": 0, "aria-valuemax": 100, "aria-valuenow": pct, "aria-label": label }, fill);
+  }
+  function barRow(pct, status, label) {
+    return h("div", { class: "barrow" }, bar(pct, status, label), h("span", { class: "pct", text: pct + "%" }));
+  }
+
+  function areaLabel(a) { return AREAS[a] || a || "General"; }
+
+  function taskVisible(t) {
+    if (filters.area !== "all" && t.area !== filters.area) return false;
+    var s = filters.status;
+    if (s === "all") return true;
+    if (s === "active") return t.status === "in_progress" || t.status === "in_review";
+    return t.status === s;
+  }
+
+  function isOpen(key, def) { return Object.prototype.hasOwnProperty.call(toggled, key) ? toggled[key] : def; }
+  function track(el, key) { el.addEventListener("toggle", function () { toggled[key] = el.open; }); return el; }
+
+  function renderTask(t) {
+    var pct = taskPct(t);
+    var subs = t.subtasks || [];
+    var doneSubs = subs.filter(function (s) { return s.status === "done"; }).length;
+    var active = t.status === "in_progress" || t.status === "in_review" || t.status === "blocked";
+    var art = h("article", { class: "task", "data-s": t.status, id: "task-" + t.id },
+      h("div", { class: "head" },
+        h("span", { class: "tid", text: t.id }),
+        h("h3", { class: "ttl", text: t.title || "(untitled)" }),
+        badge(t.status),
+        h("span", { class: "badge tag", text: areaLabel(t.area) }),
+        t.owner ? h("span", { class: "badge tag", text: t.owner }) : null,
+        t.size ? h("span", { class: "badge tag", title: "Size", text: "Size " + t.size }) : null
+      ),
+      barRow(pct === null ? 0 : pct, t.status, "Progress of task " + t.id)
+    );
+    if (t.status === "blocked" && t.blockedReason) art.appendChild(h("p", { class: "blockedmsg", text: "Blocked: " + t.blockedReason }));
+    if (t.note) art.appendChild(h("p", { class: "note small", text: t.note }));
+
+    var review = t.review || {};
+    var pipe = h("ol", { class: "pipe", "aria-label": "Review steps for " + t.id });
+    var bs = BUILD_STATE[t.status] || "pending";
+    pipe.appendChild(stepEl("Build", bs));
+    STEPS.forEach(function (s) { pipe.appendChild(stepEl(s[1], review[s[0]] || "na")); });
+    art.appendChild(pipe);
+
+    if (subs.length) {
+      var d = h("details", { class: "task" },
+        h("summary", {}, h("span", { class: "chev", "aria-hidden": "true", text: "▸" }), "Subtasks (" + doneSubs + " of " + subs.length + " done)")
+      );
+      if (isOpen("t:" + t.id, active)) d.open = true;
+      track(d, "t:" + t.id);
+      var ul = h("ul", { class: "subs" });
+      subs.forEach(function (s) {
+        var p = subPct(s);
+        ul.appendChild(h("li", { class: "sub", "data-s": s.status },
+          h("div", { class: "line1" }, h("span", { class: "t", text: s.title || "(untitled)" }), badge(s.status)),
+          p === null ? null : barRow(p, s.status, "Progress of subtask " + s.id),
+          s.note ? h("p", { class: "note small", text: s.note }) : null
+        ));
+      });
+      d.appendChild(ul);
+      art.appendChild(d);
+    }
+    return art;
+  }
+  function stepEl(label, state) {
+    var r = REVIEW[state] || REVIEW.na;
+    return h("li", { class: "step", "data-s": state },
+      h("span", { class: "sym", "aria-hidden": "true", text: r.sym }),
+      h("span", { text: label }),
+      h("span", { class: "st", text: r.label })
+    );
+  }
+
+  function renderPhase(p) {
+    var tasks = (p.tasks || []);
+    var vis = tasks.filter(taskVisible);
+    if (!vis.length) return null;
+    var st = phaseStatus(p);
+    var pct = weighted(tasks);
+    var done = tasks.filter(function (t) { return t.status === "done"; }).length;
+    var d = h("details", { class: "phase", id: "phase-" + p.id },
+      h("summary", {},
+        h("div", { class: "head" },
+          h("span", { class: "chev", "aria-hidden": "true", text: "▸" }),
+          h("h2", { text: p.title || p.id }),
+          badge(st),
+          h("span", { class: "muted small", text: done + " of " + tasks.length + " tasks done" })
+        ),
+        barRow(pct, st, "Progress of phase " + p.id)
+      )
+    );
+    if (isOpen("p:" + p.id, st !== "done")) d.open = true;
+    track(d, "p:" + p.id);
+    var body = h("div", { class: "phase-body" });
+    if (p.goal) body.appendChild(h("p", { class: "goal", text: p.goal }));
+    vis.forEach(function (t) { body.appendChild(renderTask(t)); });
+    d.appendChild(body);
+    return d;
+  }
+
+  function counts(tasks) {
+    var c = { done: 0, in_progress: 0, in_review: 0, blocked: 0, todo: 0, skipped: 0 };
+    tasks.forEach(function (t) { c[STATUS[t.status] ? t.status : "todo"]++; });
+    return c;
+  }
+
+  function filterButton(group, value, label) {
+    var b = h("button", { type: "button", "aria-pressed": String(filters[group] === value), text: label });
+    b.addEventListener("click", function () { filters[group] = value; writeHash(); render(); });
+    return b;
+  }
+  function writeHash() {
+    var parts = [];
+    if (filters.status !== "all") parts.push("status=" + encodeURIComponent(filters.status));
+    if (filters.area !== "all") parts.push("area=" + encodeURIComponent(filters.area));
+    try { history.replaceState(null, "", parts.length ? "#" + parts.join("&") : location.pathname + location.search); } catch (e) { /* file:// in some browsers */ }
+  }
+  function readHash() {
+    var m = /status=([\w-]+)/.exec(location.hash); if (m) filters.status = m[1];
+    m = /area=([\w-]+)/.exec(location.hash); if (m) filters.area = m[1];
+  }
+
+  function render() {
+    var frag = document.createDocumentFragment();
+    var errs = validate(data);
+    var phases = Array.isArray(data.phases) ? data.phases : [];
+    var allTasks = [];
+    phases.forEach(function (p) { (Array.isArray(p.tasks) ? p.tasks : []).forEach(function (t) { allTasks.push(t); }); });
+    var updated = parseDate(data.updated);
+
+    document.getElementById("title").textContent = (data.project || "Project") + " progress";
+    document.title = (data.project || "Project") + " progress";
+    var ue = document.getElementById("updated");
+    ue.textContent = "";
+    ue.appendChild(document.createTextNode("Last updated " + ago(updated)));
+    if (updated) ue.appendChild(document.createTextNode(" (" + absolute(updated) + ")"));
+    if (data.updatedBy) ue.appendChild(document.createTextNode(" by " + data.updatedBy));
+
+    if (errs.length) {
+      var ul = h("ul");
+      errs.slice(0, 6).forEach(function (e) { ul.appendChild(h("li", { text: e })); });
+      if (errs.length > 6) ul.appendChild(h("li", { text: "…and " + (errs.length - 6) + " more." }));
+      frag.appendChild(h("div", { class: "banner err", role: "alert" }, h("strong", { text: "The data block has problems, so some numbers may be wrong:" }), ul));
+    }
+    var anyActive = allTasks.some(function (t) { return t.status === "in_progress" || t.status === "in_review"; });
+    if (anyActive && updated && Date.now() - updated.getTime() > STALE_MS) {
+      frag.appendChild(h("div", { class: "banner", role: "status", text: "This page has not been updated for " + ago(updated).replace(" ago", "") + ", but work is marked as running. Ask for a refresh from the progress-reporter agent, and check docs/ROADMAP.md." }));
+    }
+
+    var overall = weighted(allTasks);
+    var c = counts(allTasks);
+    var overallStatus = allTasks.length && allTasks.every(function (t) { return t.status === "done" || t.status === "skipped"; }) ? "done" : (c.blocked ? "blocked" : (overall > 0 ? "in_progress" : "todo"));
+
+    var nowBox = h("div", { class: "now" });
+    if (data.now) nowBox.appendChild(h("p", {}, h("b", { text: "Now: " }), data.now));
+    if (Array.isArray(data.next) && data.next.length) nowBox.appendChild(h("p", {}, h("b", { text: "Next: " }), data.next.join(" → ")));
+
+    var stats = h("div", { class: "stats", role: "list", "aria-label": "Tasks by status" });
+    ["done", "in_review", "in_progress", "blocked", "todo"].forEach(function (k) {
+      var li = h("span", { role: "listitem" }, badge(k));
+      li.firstChild.appendChild(document.createTextNode(" " + c[k]));
+      stats.appendChild(li);
+    });
+
+    var overview = h("section", { class: "card", "aria-labelledby": "ov" },
+      h("h2", { id: "ov", class: "sr-only", text: "Overall progress" }),
+      h("div", { class: "overall" },
+        h("div", {}, h("div", { class: "big", text: overall + "%" }), h("div", { class: "muted small", text: "of planned work, weighted by task size" })),
+        h("div", { class: "bar-wrap" }, bar(overall, overallStatus, "Overall progress", true), data.summary ? h("p", { class: "note", text: data.summary }) : null)
+      ),
+      stats, nowBox
+    );
+
+    var needs = Array.isArray(data.needsOwner) ? data.needsOwner : [];
+    var needsBox;
+    if (needs.length) {
+      var nl = h("ul");
+      needs.forEach(function (n) {
+        var li = h("li", {}, n.text || "");
+        if (n.taskId) li.appendChild(h("span", { class: "small", text: " (" + n.taskId + (n.since ? ", since " + n.since : "") + ")" }));
+        nl.appendChild(li);
+      });
+      needsBox = h("section", { class: "card needs", "aria-labelledby": "needs-h" }, h("h2", { id: "needs-h", text: "Waiting on you (" + needs.length + ")" }), nl);
+    } else {
+      needsBox = h("section", { class: "card ok", "aria-labelledby": "needs-h" }, h("h2", { id: "needs-h", text: "Waiting on you" }), h("p", { class: "muted", text: "Nothing needs your decision right now." }));
+    }
+    frag.appendChild(h("div", { class: "grid2" }, overview, needsBox));
+
+    var row = h("nav", { class: "phases-row", "aria-label": "Phases" });
+    phases.forEach(function (p) {
+      var st = phaseStatus(p), pct = weighted(p.tasks || []);
+      var a = h("a", { class: "phasecard", href: "#phase-" + p.id },
+        h("div", { class: "row1" }, h("span", { class: "nm", text: p.title || p.id }), badge(st)),
+        barRow(pct, st, "Progress of phase " + p.id)
+      );
+      a.addEventListener("click", function () { var el = document.getElementById("phase-" + p.id); if (el) { el.open = true; toggled["p:" + p.id] = true; } });
+      row.appendChild(a);
+    });
+    frag.appendChild(row);
+
+    var areas = [];
+    allTasks.forEach(function (t) { if (t.area && areas.indexOf(t.area) < 0) areas.push(t.area); });
+    var fbar = h("div", { class: "filters", role: "group", "aria-label": "Filters" },
+      h("div", { class: "group" }, h("span", { class: "gl", text: "Show" }),
+        filterButton("status", "all", "All"), filterButton("status", "active", "Active"), filterButton("status", "in_review", "In review"),
+        filterButton("status", "blocked", "Blocked"), filterButton("status", "todo", "To do"), filterButton("status", "done", "Done"))
+    );
+    if (areas.length > 1) {
+      var ag = h("div", { class: "group" }, h("span", { class: "gl", text: "Area" }), filterButton("area", "all", "All areas"));
+      areas.forEach(function (a) { ag.appendChild(filterButton("area", a, areaLabel(a))); });
+      fbar.appendChild(ag);
+    }
+    frag.appendChild(fbar);
+
+    var shown = 0;
+    phases.forEach(function (p) { var el = renderPhase(p); if (el) { frag.appendChild(el); shown++; } });
+    if (!shown) frag.appendChild(h("p", { class: "empty", text: "No tasks match these filters." }));
+
+    var log = Array.isArray(data.log) ? data.log.slice() : [];
+    log.sort(function (a, b) { return (Date.parse(b.at) || 0) - (Date.parse(a.at) || 0); });
+    var limit = showAllLog ? 60 : 8;
+    var al = h("ol", { class: "activity" });
+    log.slice(0, limit).forEach(function (e) {
+      var dt = parseDate(e.at);
+      al.appendChild(h("li", {},
+        h("div", { class: "meta" }, h("span", { class: "who", text: e.agent || "agent" }), h("time", { datetime: dt ? dt.toISOString() : null, title: absolute(dt), text: ago(dt) }), e.taskId ? h("span", { text: e.taskId }) : null),
+        h("p", { text: e.text || "" })
+      ));
+    });
+    var actSec = h("section", { class: "card", "aria-labelledby": "act-h", style: "margin-top:24px" }, h("h2", { id: "act-h", text: "Recent activity" }));
+    if (log.length) actSec.appendChild(al); else actSec.appendChild(h("p", { class: "muted", text: "No activity yet." }));
+    if (log.length > 8) {
+      var more = h("button", { type: "button", style: "margin-top:12px", text: showAllLog ? "Show fewer" : "Show more (" + Math.min(log.length, 60) + " entries)" });
+      more.addEventListener("click", function () { showAllLog = !showAllLog; render(); });
+      actSec.appendChild(more);
+    }
+    frag.appendChild(actSec);
+
+    app.textContent = "";
+    app.appendChild(frag);
+  }
+
+  function boot() {
+    var node = document.getElementById("progress-data");
+    try { data = JSON.parse(node.textContent); }
+    catch (e) {
+      app.textContent = "";
+      app.appendChild(h("div", { class: "banner err", role: "alert" }, h("strong", { text: "The progress data could not be read: " }), String(e && e.message || e), h("p", { class: "small", text: " Fix the JSON in the data block (or ask the progress-reporter agent to), then reload." })));
+      return;
+    }
+    readHash();
+    render();
+  }
+
+  /* theme + auto refresh (per-viewer conveniences; storage may be blocked on file://) */
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
+  var THEMES = ["auto", "light", "dark"], themeBtn = document.getElementById("theme");
+  function applyTheme(t) {
+    if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+    themeBtn.textContent = "Theme: " + t;
+    themeBtn.setAttribute("aria-label", "Theme: " + t + ". Click to change.");
+  }
+  var theme = store("progress-theme"); if (THEMES.indexOf(theme) < 0) theme = "auto"; applyTheme(theme);
+  themeBtn.addEventListener("click", function () { theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length]; store("progress-theme", theme); applyTheme(theme); });
+  document.getElementById("reload").addEventListener("click", function () { location.reload(); });
+  var auto = document.getElementById("auto"), timer = null;
+  function setAuto(on) { if (timer) { clearInterval(timer); timer = null; } if (on) timer = setInterval(function () { location.reload(); }, 30000); }
+  auto.checked = store("progress-auto") === "1"; setAuto(auto.checked);
+  auto.addEventListener("change", function () { store("progress-auto", auto.checked ? "1" : "0"); setAuto(auto.checked); });
+
+  boot();
+})();
+</script>
+</body>
+</html>

@@ -2,6 +2,13 @@
 
 All notable changes to the starter. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [Semantic Versioning](https://semver.org/) (major: a file moves, is renamed or changes its contract with SETUP.md; minor: new files or sections; patch: fixes and wording).
 
+## [1.10.0] - 2026-10-30
+
+### Added
+- `PROGRESS.html` → `docs/`: the owner's live progress page. One self-contained file (no server, no network requests) that shows milestones, tasks and subtasks with progress bars, a build and review pipeline per task (code review, UX review, QA), filters by status and area, a "Waiting on you" box, an overall percentage weighted by task size, and recent activity. Seeded from the M0 queue; light and dark; phone to desktop; WCAG 2.2 AA checked with axe.
+- `agent-progress-reporter.md` → `.claude/agents/progress-reporter.md`: a Haiku agent that is the only writer of the page. It edits only the JSON data block, mirrors `ROADMAP.md` (the roadmap wins), follows an event-to-change table, never marks work done without evidence, and validates its edit with a one-line check.
+- Wired in: `CLAUDE.md` (team, docs table, objective table, rule), `WORKFLOW.md` (§1 team, §2 loop, §5 status files, §6 model), `ROADMAP.md` working rule 8, `README.md`, `00-START-HERE.md` (table, `mv` command, "Seeing progress"), `SETUP.md` prerequisites, and the `project-manager` and `credits-optimizer` agents.
+
 ## [1.9.0] - 2026-10-30
 
 ### Added

@@ -16,7 +16,7 @@ Read only what you need: the task's row and details in `docs/ROADMAP.md`, plus `
 1. **Who and which model:** match the model to what the work needs, not to its price.
    - **Default to the strongest model** for building, design, security review, migrations, debugging and anything the owner will see or judge.
    - Use a mid-size model only for mechanical work where it's just as good: running a QA checklist, doc edits, renames, small copy fixes.
-   - Use the smallest model or an Explore agent only for lookups. Large skills and references (Vercel agent-skills and similar) are read by `skills-scout` on Haiku, which hands back only the rules the task needs.
+   - Use the smallest model or an Explore agent only for lookups. Large skills and references (Vercel agent-skills and similar) are read by `skills-scout` on Haiku, which hands back only the rules the task needs. `progress-reporter` (Haiku) updates `docs/PROGRESS.html`: plan one batched call per step (see `docs/WORKFLOW.md` §2), never one per tool call.
    - **Flag expensive skill use:** if the plan has an agent on the strongest model loading a skill or reference over about 20 KB, or running a skill-based audit over more than about 10 files, put a **Credit warning** line in the plan and route the lookup to `skills-scout` (`docs/WORKFLOW.md` §8).
    - When in doubt, use the stronger model: redoing weak work costs more than doing it right once.
    Say whether the task needs a designer first or can go straight to a developer.

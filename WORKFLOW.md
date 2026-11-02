@@ -21,6 +21,7 @@ How work moves through the team of Claude Code agents (`.claude/agents/`), what 
 | `project-manager` | Turns requests into ordered tasks with owners; keeps `GUIDE.md` and `ROADMAP.md` current; branch names and PR text | Docs only |
 | `credits-optimizer` | Before a task: which agent and model, a tight brief, the checks. After: where credits were wasted | No |
 | `skills-scout` | Runs on Haiku: reads large skills and references (Vercel agent-skills) and returns only the rules a task needs; first-pass checklist scans | No |
+| `progress-reporter` | Runs on Haiku: the only agent that edits `docs/PROGRESS.html`, the owner's live progress page (phases, tasks, subtasks with progress, review steps, what needs the owner, activity) | The progress page only |
 | `product-designer` | Brief, user flow, scope, then screens; owns `DESIGN_SYSTEM.md`; WCAG 2.2 AA and the UX laws | Visual changes |
 | `developer` | Front end in `src/` | Yes |
 | `backend-developer` | Worker API, D1, R2, sign-in, AI calls in `worker/`, `migrations/`, `shared/` | Yes |
@@ -49,6 +50,7 @@ owner request
 - `ux-reviewer` and `code-reviewer` are read-only, so they can run side by side after a build; fixes go back to the one builder.
 - Backend-only tasks skip design, `ux-reviewer` and browser QA, but not `code-reviewer` and tests.
 - New requests go to the end of the queue unless the owner says otherwise.
+- **The owner's progress page.** `progress-reporter` updates `docs/PROGRESS.html` at each step: a task starts, a subtask finishes, a reviewer gives a verdict, work is blocked, the owner is needed, a task closes. Only the main session can call it (agents can't call other agents), so it runs it with a short event note after each of those moments and batches events from the same moment (two reviewers finishing together are one call). The page never replaces the roadmap: it mirrors it, and the roadmap wins any difference.
 - A task is done when its "Done when" criteria in `ROADMAP.md` are met, all checks pass, and the roadmap is updated.
 
 ## 3. What the owner approves
@@ -78,11 +80,12 @@ Never reset, check out, stash or clean uncommitted work. If a task conflicts wit
 | File | Job | Updated |
 | --- | --- | --- |
 | `docs/ROADMAP.md` | **The only status source:** dashboard (Now, Next, Waiting on the owner, Released), queue (the **Status column comes right after #**, so status is the first thing read), task details, owner decisions, risks, log | After every task |
+| `docs/PROGRESS.html` | **Live view for the owner:** phases, tasks, subtasks with progress bars, review steps, what needs the owner, recent activity. Open it in a browser. A view of the roadmap plus live detail; the roadmap wins any difference | At each step, by `progress-reporter` only |
 | `docs/GUIDE.md` | **Reference:** what the product does, features with stable F-IDs and a State line, architecture, setup | Only when behaviour, permissions, routes or setup change |
 | `docs/DESIGN_SYSTEM.md` | Design rules and the owner's feedback (§22) | When a rule changes or the owner gives feedback |
 | `CLAUDE.md` | What every agent reads first | When conventions change |
 
-Never copy status into the guide, `CLAUDE.md`, PR text or issues; link to the roadmap instead. Feature IDs are permanent. "Implemented" isn't "released": released means merged, migrated and deployed.
+Never copy status into the guide, `CLAUDE.md`, PR text or issues; link to the roadmap instead. The progress page is the one mirror, read-only for everyone but `progress-reporter`. Feature IDs are permanent. "Implemented" isn't "released": released means merged, migrated and deployed.
 
 ## 6. Briefing an agent
 
@@ -93,7 +96,7 @@ A good brief makes the agent right the first time (rework is the biggest waste):
 - What **not** to touch (other agents' areas, uncommitted work, `src/components/ui/`).
 - Design notes from `product-designer` for UI work.
 - The checks to run and what to report (file paths, results, anything left or risky).
-- Model: the strongest for building, design, security, migrations, debugging; mid-size only for mechanical work (QA checklists, doc edits); `skills-scout` (Haiku) for skill and reference lookups; see `credits-optimizer` and §8.
+- Model: the strongest for building, design, security, migrations, debugging; mid-size only for mechanical work (QA checklists, doc edits); `skills-scout` (Haiku) for skill and reference lookups; `progress-reporter` (Haiku) for the progress page; see `credits-optimizer` and §8.
 
 ## 7. Handoff after a context reset
 

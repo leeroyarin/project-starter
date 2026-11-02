@@ -24,6 +24,7 @@ Last updated **{{DATE}}**.
 5. A task that needs design starts with `product-designer`, before any code.
 6. New requests go to the end of the queue unless the owner says otherwise.
 7. Quality first; cut wasted credits, not care. Never PNG: text checks first, then at most a few JPEGs (quality 60, CSS scale).
+8. **The owner's progress page** is `docs/PROGRESS.html`: `progress-reporter` updates it after each step (task start, subtask done, review verdict, block, owner decision needed, task closed). It mirrors this file; if they disagree, this file wins.
 
 ## Milestones
 

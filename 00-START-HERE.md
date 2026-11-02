@@ -40,12 +40,14 @@ A flat set of Markdown files that turns an empty folder into a production-ready 
 | `CLAUDE_PLUGINS.md` | `docs/CLAUDE_PLUGINS.md` | Community Claude plugins sorted by job (code, research, tokens, design, writing and video), one recommended pick per job, licences and what each runs on your computer |
 | `SEO_AND_DISCOVERABILITY.md` | `docs/SEO_AND_DISCOVERABILITY.md` | Getting a public site found: crawlability, Search Console and Bing, sitemap and robots.txt, meta titles and descriptions, SEO and GEO, Google Business Profile; used at launch, portable to any project |
 | `PRE_LAUNCH_COMPLIANCE_CHECKLIST.md` | `docs/PRE_LAUNCH_COMPLIANCE_CHECKLIST.md` | Legal, data, honest-design, accessibility and licence checks, used **only at the end of production** before release; portable to any project |
+| `PROGRESS.html` | `docs/PROGRESS.html` | The owner's live progress page: open it in a browser to see phases, tasks, subtasks with progress, review steps, what needs you and recent activity; updated only by `progress-reporter` |
 | `agent-project-manager.md` | `.claude/agents/project-manager.md` | Plans, keeps GUIDE and ROADMAP current, branches and PR text |
 | `agent-credits-optimizer.md` | `.claude/agents/credits-optimizer.md` | Plans each task for full quality without waste; audits waste afterwards |
 | `agent-product-designer.md` | `.claude/agents/product-designer.md` | Brief, flow, scope, screens; WCAG 2.2 AA; owns `DESIGN_SYSTEM.md` |
 | `agent-developer.md` | `.claude/agents/developer.md` | Builds the front end in `src/` |
 | `agent-backend-developer.md` | `.claude/agents/backend-developer.md` | Builds the Worker API, data, files, sign-in, AI calls |
 | `agent-skills-scout.md` | `.claude/agents/skills-scout.md` | Runs on Haiku: reads large skills and references and returns only the rules a task needs; shows the credit warning |
+| `agent-progress-reporter.md` | `.claude/agents/progress-reporter.md` | Runs on Haiku: the only agent that edits `docs/PROGRESS.html`; the main session calls it after each step with a short event note |
 | `agent-ux-reviewer.md` | `.claude/agents/ux-reviewer.md` | Audits screens against the UI principles, UX laws and §23 checklist (read-only) |
 | `agent-code-reviewer.md` | `.claude/agents/code-reviewer.md` | Reviews diffs before every commit (read-only) |
 | `agent-qa-tester.md` | `.claude/agents/qa-tester.md` | Tests in the browser: widths, themes, keyboard, axe; text checks first, JPEG only |
@@ -57,7 +59,7 @@ Shell version of step 0 (from the folder with the pasted files):
 
 ```bash
 mkdir -p docs .claude/agents
-mv GUIDE.md ROADMAP.md DESIGN_SYSTEM.md DESIGN_INSPIRATION.md WORKFLOW.md RESEARCH.md BACKEND_CLOUDFLARE.md ENV_AND_SECRETS.md SECURITY.md AI_FEATURES.md TESTING.md DEPLOY_AND_CI.md PRE_LAUNCH_COMPLIANCE_CHECKLIST.md SEO_AND_DISCOVERABILITY.md CLAUDE_PLUGINS.md docs/
+mv GUIDE.md ROADMAP.md DESIGN_SYSTEM.md DESIGN_INSPIRATION.md WORKFLOW.md RESEARCH.md BACKEND_CLOUDFLARE.md ENV_AND_SECRETS.md SECURITY.md AI_FEATURES.md TESTING.md DEPLOY_AND_CI.md PRE_LAUNCH_COMPLIANCE_CHECKLIST.md SEO_AND_DISCOVERABILITY.md CLAUDE_PLUGINS.md PROGRESS.html docs/
 [ -f BROWSER_EXTENSION.md ] && mv BROWSER_EXTENSION.md docs/
 for f in agent-*.md; do mv "$f" ".claude/agents/${f#agent-}"; done
 ```
@@ -91,11 +93,13 @@ The branch prefix `dksk/` is the maintainer's initials. Another maintainer can s
 
 After setup, `CLAUDE.md` has a **"Where to look for each objective"** table: for each kind of work (plan, research, design, expressive pages, front end, API, AI, QA, deploy, credits, diagrams and video, SEO, compliance) it names the docs to read, the agents to use, and any skills, plugins or libraries, with the cheapest-first order for finding a skill.
 
+**Seeing progress:** open `docs/PROGRESS.html` in a browser at any time. The `progress-reporter` agent (Haiku, so it costs little) updates it after each step, and `project-manager` seeds it from the roadmap queue, so you can follow the work without reading the chat. It is a view; `ROADMAP.md` stays the plan.
+
 ## Conventions these files carry
 
 - Branches `dksk/<type>/<name>`; one commit per task, each one typechecks. No commit, push, deploy, remote migration, secret change or local data reset without the owner.
 - One build agent at a time; every build ends with `code-reviewer`, and UI builds with `ux-reviewer` and `qa-tester`.
-- Status lives only in `ROADMAP.md` (status column right after #); `GUIDE.md` is reference.
+- Status lives only in `ROADMAP.md` (status column right after #); `GUIDE.md` is reference. `docs/PROGRESS.html` is the owner's live view of it, written only by `progress-reporter`.
 - The UI principles and UX laws in `DESIGN_SYSTEM.md` are followed on every screen, checked with the §23 checklist. Big UI work starts with research (`RESEARCH.md`).
 - Seed and demo data come from real public content, never invented; demo deployments have a pre-filled account per role; `DEMO_MODE` is off in production.
 - Check every UI change at phone, tablet and desktop, light and dark, with no console errors.

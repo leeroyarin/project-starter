@@ -38,13 +38,16 @@ Needs Node 22+, pnpm 10+, and a Cloudflare account for the first deploy.
 | [`CLAUDE_PLUGINS.md`](./CLAUDE_PLUGINS.md) | `docs/CLAUDE_PLUGINS.md` | Which community Claude plugin to install for each kind of work, one pick per job, with licences and what each runs |
 | [`SEO_AND_DISCOVERABILITY.md`](./SEO_AND_DISCOVERABILITY.md) | `docs/SEO_AND_DISCOVERABILITY.md` | Launch guide for being found on Google, Bing and AI answer engines (Search Console, sitemap, meta tags, SEO and GEO, Google Business Profile), with the Worker setup for public pages |
 | [`PRE_LAUNCH_COMPLIANCE_CHECKLIST.md`](./PRE_LAUNCH_COMPLIANCE_CHECKLIST.md) | `docs/PRE_LAUNCH_COMPLIANCE_CHECKLIST.md` | Pre-release compliance gate (privacy, terms, cookies, consents, deletion, dark patterns, accessibility, licences); used only at the end of production, portable to any project |
-| `agent-*.md` (10 files) | `.claude/agents/<name>.md` | project-manager, credits-optimizer, skills-scout, product-designer, developer, backend-developer, ux-reviewer, code-reviewer, qa-tester, devops |
+| [`PROGRESS.html`](./PROGRESS.html) | `docs/PROGRESS.html` | The owner's live progress page: open it in a browser to see phases, tasks, subtasks with progress bars, review steps, what needs you and recent activity. Updated only by the `progress-reporter` agent |
+| `agent-*.md` (11 files) | `.claude/agents/<name>.md` | project-manager, credits-optimizer, skills-scout, progress-reporter, product-designer, developer, backend-developer, ux-reviewer, code-reviewer, qa-tester, devops |
 
 ## Find what you need
 
 Every doc has one job (table above). To go from a goal to the right doc, agent, skill or plugin ("design a screen", "add AI features", "get found on Google", "tokens keep running out"), use the **"Where to look for each objective"** table in [`CLAUDE.md`](./CLAUDE.md#where-to-look-for-each-objective). It also gives the order for finding skills: what's already there first, then single Vercel skills read through `skills-scout`, then one community plugin from [`CLAUDE_PLUGINS.md`](./CLAUDE_PLUGINS.md), always with the owner's OK.
 
 Two docs wait for a specific moment: [`SEO_AND_DISCOVERABILITY.md`](./SEO_AND_DISCOVERABILITY.md) at launch (plus two early decisions) and [`PRE_LAUNCH_COMPLIANCE_CHECKLIST.md`](./PRE_LAUNCH_COMPLIANCE_CHECKLIST.md) at the end of production.
+
+**To see what the agents are doing without reading the chat,** open `docs/PROGRESS.html` in a browser (double-click it; it needs no server and makes no network requests). It shows each milestone, its tasks and their subtasks with progress bars, where each task stands in code review, UX review and QA, what is waiting on you, and the latest activity. The `progress-reporter` agent keeps it current; the plan itself stays in [`ROADMAP.md`](./ROADMAP.md).
 
 ## How the team works
 

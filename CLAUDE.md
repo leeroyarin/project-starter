@@ -20,13 +20,14 @@
 | Deploy (ask the owner first) | `pnpm run deploy` |
 
 ## Team (subagents in `.claude/agents/`)
-`project-manager` plans and tracks · `product-designer` shapes and designs (WCAG 2.2 AA) · `developer` builds the front end · `backend-developer` builds the Worker API, data and sign-in · `ux-reviewer` audits screens against the UI principles and UX laws (read-only) · `code-reviewer` reviews diffs · `qa-tester` tests in the browser · `devops` builds, CI and deploys · `skills-scout` (Haiku) reads large skills and references and returns only the rules a task needs · `credits-optimizer` plans each task for full quality with no wasted credits and audits waste afterwards (read-only). Use `code-reviewer` before every commit, and `ux-reviewer` plus `qa-tester` after every UI change. The full process is in `docs/WORKFLOW.md`.
+`project-manager` plans and tracks · `product-designer` shapes and designs (WCAG 2.2 AA) · `developer` builds the front end · `backend-developer` builds the Worker API, data and sign-in · `ux-reviewer` audits screens against the UI principles and UX laws (read-only) · `code-reviewer` reviews diffs · `qa-tester` tests in the browser · `devops` builds, CI and deploys · `skills-scout` (Haiku) reads large skills and references and returns only the rules a task needs · `progress-reporter` (Haiku) is the only agent that edits the owner's live progress page, `docs/PROGRESS.html` · `credits-optimizer` plans each task for full quality with no wasted credits and audits waste afterwards (read-only). Use `code-reviewer` before every commit, and `ux-reviewer` plus `qa-tester` after every UI change. The full process is in `docs/WORKFLOW.md`.
 
 ## Docs
 | File | What it's for |
 | --- | --- |
 | `docs/GUIDE.md` | Reference: product, roles, features (F-IDs), architecture, develop, deploy. Update only when behaviour, permissions, routes or setup change. |
 | `docs/ROADMAP.md` | The plan and the **only** place for status: dashboard, queue, decisions, risks, log. Update after every task. |
+| `docs/PROGRESS.html` | The owner's live progress page (open it in a browser): phases, tasks, subtasks with progress bars, review steps, what needs the owner, recent activity. A view of the roadmap plus live detail; **only `progress-reporter` edits it**, and the roadmap wins any difference. |
 | `docs/DESIGN_SYSTEM.md` | This app's design rules: UI principles (§1), UX laws (§3), components, motion, accessibility, copy, the owner's standing feedback (§22) and the **UX/UI review checklist (§23)**. Read it before any UI work. |
 | `docs/WORKFLOW.md` | The agentic process: who does what, in which order, what the owner approves, commits, seed and demo data, handoffs after a reset. |
 | `docs/DESIGN_INSPIRATION.md` | Design inspiration and toolkit (3D, glass, gradients, liquid metal, Motion, charts, animated components, Lenis smooth scroll, GSAP, Vanta backgrounds, React Bits, premium interactions such as magnetic buttons and page transitions, visual reference archives). Effects are owner opt-in; every library needs the owner's OK before it's added. |
@@ -64,6 +65,7 @@ Find the job you're about to do, read its docs first, use its agents, and only t
 | Test and QA | `docs/TESTING.md`, `docs/DESIGN_SYSTEM.md` §17 and §23 | `qa-tester`, `code-reviewer` | React Doctor for a static React scan, owner-approved (`docs/TESTING.md` §4) |
 | CI and deploys | `docs/DEPLOY_AND_CI.md`, `docs/ENV_AND_SECRETS.md` | `devops` (the owner approves) | Never `deploy-to-vercel`: we deploy to Cloudflare |
 | Browser extension | `docs/BROWSER_EXTENSION.md` | `developer`, `backend-developer` | None |
+| Show the owner what the agents are doing, or report progress | `docs/PROGRESS.html` (the owner opens it); `docs/ROADMAP.md` | `progress-reporter` (Haiku), after each step | None |
 | Save credits, or tokens keep running out | `docs/WORKFLOW.md` §8 | `credits-optimizer`, `skills-scout` | `docs/CLAUDE_PLUGINS.md` §3 (starter tools first, then Caveman) |
 | Diagrams, decks, documents, video, marketing copy | `docs/CLAUDE_PLUGINS.md` §4 and §5 | `product-designer`, `project-manager` | Claude's built-in docs, pptx and xlsx skills; Diagram Design, Humanizer, Marketing Skills, Hyperframes |
 | Get found on Google and in AI answers | `docs/SEO_AND_DISCOVERABILITY.md` (two early decisions at the start, the rest at launch) | `project-manager`, `backend-developer`, `devops` | Marketing Skills (`docs/CLAUDE_PLUGINS.md` §5) |
@@ -80,7 +82,7 @@ Find the job you're about to do, read its docs first, use its agents, and only t
 - Don't commit, push or deploy unless the owner asks. The owner also approves remote migrations, secrets, production data changes and local data resets.
 - One build agent at a time, in the roadmap's order. Each build task ends with `code-reviewer`, then (UI) `ux-reviewer` and `qa-tester`.
 - One commit per task, and every commit typechecks on its own.
-- Status lives only in `docs/ROADMAP.md`. Big UI work starts with research (`docs/RESEARCH.md`).
+- Status lives only in `docs/ROADMAP.md`. Big UI work starts with research (`docs/RESEARCH.md`). The owner's live view is `docs/PROGRESS.html`, written only by `progress-reporter`: the main session runs it after each step (task start, subtask done, review verdict, block, owner decision needed, task closed) with a short event note, batching events from the same moment. Other agents never edit that page, and the roadmap wins any difference.
 - Seed and demo data come from real public content, never invented; one demo account per role behind `DEMO_MODE`, which is never on in production.
 - Check every UI change at phone, tablet and desktop widths, in light and dark mode, with no console errors, and against the §23 checklist in `docs/DESIGN_SYSTEM.md`.
 - Never reset, check out, stash or clean uncommitted work without asking.
